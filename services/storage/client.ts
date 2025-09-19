@@ -1,4 +1,7 @@
-// Azure Blob client removed as part of migration to Vercel Blob.
-// This stub remains to avoid import errors in legacy modules that are no longer re-exported.
-const blobServiceClient: any = {};
+import {BlobServiceClient} from "@azure/storage-blob";
+
+const blobServiceUrl = `${process.env.NEXT_PUBLIC_AZURE_STORAGE_ACCOUNT_URL}?sv=${process.env.NEXT_PUBLIC_AZURE_STORAGE_SAS_STRING}`;
+
+const blobServiceClient = new BlobServiceClient(blobServiceUrl);
+
 export default blobServiceClient;

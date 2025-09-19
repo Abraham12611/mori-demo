@@ -6,8 +6,6 @@ import { getSavedTokensContainer } from "../containers/saved-tokens";
 
 import { SavedToken } from "../types/saved-token";
 
-import { convexClient, useConvex } from "@/lib/convexClient";
-
 // CREATE
 
 /**
@@ -19,13 +17,6 @@ import { convexClient, useConvex } from "@/lib/convexClient";
  * @returns {Promise<SavedToken | null>} The newly created saved token or null if creation failed.
  */
 export const addSavedToken = async (token: SavedToken): Promise<SavedToken | null> => {
-    if (useConvex && convexClient) {
-        try {
-            return (await (convexClient as any).mutation("savedTokens:addSavedToken", { token })) as SavedToken | null;
-        } catch {
-            return null;
-        }
-    }
     return add<SavedToken, SavedToken>(await getSavedTokensContainer(), token);
 };
 
@@ -41,13 +32,6 @@ export const addSavedToken = async (token: SavedToken): Promise<SavedToken | nul
  * @returns {Promise<SavedToken | null>} The retrieved saved token or null if not found.
  */
 export const getSavedToken = async (id: SavedToken["id"], userId: SavedToken["userId"]): Promise<SavedToken | null> => {
-    if (useConvex && convexClient) {
-        try {
-            return (await (convexClient as any).query("savedTokens:getSavedToken", { id, userId })) as SavedToken | null;
-        } catch {
-            return null;
-        }
-    }
     return get(await getSavedTokensContainer(), id, userId);
 };
 
@@ -60,13 +44,6 @@ export const getSavedToken = async (id: SavedToken["id"], userId: SavedToken["us
  * @returns {Promise<SavedToken[]>} An array of saved tokens.
  */
 export const findSavedTokensByUserId = async (userId: string): Promise<SavedToken[]> => {
-    if (useConvex && convexClient) {
-        try {
-            return (await (convexClient as any).query("savedTokens:findSavedTokensByUserId", { userId })) as SavedToken[];
-        } catch {
-            return [] as SavedToken[];
-        }
-    }
     return find(
         await getSavedTokensContainer(),
         `SELECT * FROM c WHERE c.userId = @userId ORDER BY c._ts DESC`,
@@ -86,12 +63,5 @@ export const findSavedTokensByUserId = async (userId: string): Promise<SavedToke
  * @returns {Promise<boolean>} True if the deletion was successful, false otherwise.
  */
 export const deleteSavedToken = async (id: SavedToken["id"], userId: SavedToken["userId"]): Promise<boolean> => {
-    if (useConvex && convexClient) {
-        try {
-            return (await (convexClient as any).mutation("savedTokens:deleteSavedToken", { id, userId })) as boolean;
-        } catch {
-            return false;
-        }
-    }
     return del(await getSavedTokensContainer(), id, userId);
 };

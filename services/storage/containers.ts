@@ -1,5 +1,7 @@
-// Legacy stub: Azure Blob containers removed during migration.
-// Kept for compatibility in case of stale imports; not used by current code paths.
+import blobServiceClient from "./client";
+
 export const getContainerClient = async () => {
-  return {} as any;
+    const containerClient = blobServiceClient.getContainerClient("images");
+    await containerClient.createIfNotExists({ access: 'blob' });
+    return containerClient;
 };

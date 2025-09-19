@@ -1,21 +1,17 @@
-export const uploadImage = async (file: File) => {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("filename", file.name);
+import { getContainerClient } from "@/services/storage";
 
-  const res = await fetch("/api/upload", {
-    method: "POST",
-    body: formData,
-  });
-  if (!res.ok) {
-    throw new Error("Image upload failed");
-  }
-  const { url } = (await res.json()) as { url: string };
-  return url;
-};
+export const uploadImage = async (file: File) => {
+    const blockBlobClient = (await getContainerClient()).getBlockBlobClient(`${file.name}`);
+    if (await blockBlobClient.exists()) {
+        await blockBlobClient.delete();
+    }
+    await blockBlobClient.uploadData(await file.arrayBuffer());
+    return blockBlobClient.url.slice(0, blockBlobClient.url.indexOf("?"));
+}
 
 export const deleteImage = async (fileName: string) => {
-  await fetch(`/api/delete-image?fileName=${encodeURIComponent(fileName)}`, {
-    method: "DELETE",
-  });
-};
+    const blockBlobClient = (await getContainerClient()).getBlockBlobClient(fileName);
+    if (await blockBlobClient.exists()) {
+        await blockBlobClient.delete();
+    }
+}

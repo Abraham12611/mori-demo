@@ -12,8 +12,6 @@ import { Message } from "ai";
 
 import { ChainType } from "@/app/_contexts/chain-context";
 
-import { convexClient, useConvex } from "@/lib/convexClient";
-
 // CREATE
 
 /**
@@ -25,13 +23,6 @@ import { convexClient, useConvex } from "@/lib/convexClient";
  * @returns {Promise<Chat | null>} The newly created chat or null if creation failed.
  */
 export const addChat = async (chat: Chat): Promise<Chat | null> => {
-    if (useConvex && convexClient) {
-        try {
-            return (await (convexClient as any).mutation("chats:addChat", { chat })) as Chat | null;
-        } catch {
-            return null;
-        }
-    }
     return add<Chat, Chat>(await getChatsContainer(), chat);
 };
 
@@ -47,13 +38,6 @@ export const addChat = async (chat: Chat): Promise<Chat | null> => {
  * @returns {Promise<Chat | null>} The retrieved chat or null if not found.
  */
 export const getChat = async (id: Chat["id"], userId: Chat["userId"]): Promise<Chat | null> => {
-    if (useConvex && convexClient) {
-        try {
-            return (await (convexClient as any).query("chats:getChat", { id, userId })) as Chat | null;
-        } catch {
-            return null;
-        }
-    }
     return get(await getChatsContainer(), id, userId);
 };
 
@@ -66,13 +50,6 @@ export const getChat = async (id: Chat["id"], userId: Chat["userId"]): Promise<C
  * @returns {Promise<Chat[]>} An array of chats matching the criteria.
  */
 export const findChatsByUser = async (userId: Chat["userId"]): Promise<Chat[]> => {
-    if (useConvex && convexClient) {
-        try {
-            return (await (convexClient as any).query("chats:findChatsByUser", { userId })) as Chat[];
-        } catch {
-            return [] as Chat[];
-        }
-    }
     return find(
         await getChatsContainer(), 
         `SELECT * FROM c WHERE c.userId = @userId ORDER BY c._ts DESC`, 
@@ -93,13 +70,6 @@ export const findChatsByUser = async (userId: Chat["userId"]): Promise<Chat[]> =
  * @returns {Promise<boolean>} True if the update was successful, false otherwise.
  */
 export const updateChatTagline = async (id: Chat["id"], userId: Chat["userId"], tagline: string): Promise<boolean> => {
-    if (useConvex && convexClient) {
-        try {
-            return (await (convexClient as any).mutation("chats:updateChatTagline", { id, userId, tagline })) as boolean;
-        } catch {
-            return false;
-        }
-    }
     return update(
         await getChatsContainer(),
         id,
@@ -119,13 +89,6 @@ export const updateChatTagline = async (id: Chat["id"], userId: Chat["userId"], 
  * @returns {Promise<boolean>} True if the update was successful, false otherwise.
  */
 export const updateChatChain = async (id: Chat["id"], userId: Chat["userId"], chain: Chat["chain"]): Promise<boolean> => {
-    if (useConvex && convexClient) {
-        try {
-            return (await (convexClient as any).mutation("chats:updateChatChain", { id, userId, chain })) as boolean;
-        } catch {
-            return false;
-        }
-    }
     return update(
         await getChatsContainer(),
         id,
@@ -145,13 +108,6 @@ export const updateChatChain = async (id: Chat["id"], userId: Chat["userId"], ch
  * @returns {Promise<boolean>} True if the update was successful, false otherwise.
  */
 export const addMessageToChat = async (id: Chat["id"], userId: Chat["userId"], message: Message): Promise<boolean> => {
-    if (useConvex && convexClient) {
-        try {
-            return (await (convexClient as any).mutation("chats:addMessageToChat", { id, userId, message })) as boolean;
-        } catch {
-            return false;
-        }
-    }
     return update(
         await getChatsContainer(),
         id,
@@ -177,13 +133,6 @@ export const updateChatMessages = async (
     userId: Chat["userId"], 
     updates: { messages: Message[], chain?: ChainType }
 ): Promise<boolean> => {
-    if (useConvex && convexClient) {
-        try {
-            return (await (convexClient as any).mutation("chats:updateChatMessages", { id, userId, messages: updates.messages, chain: updates.chain })) as boolean;
-        } catch {
-            // fall back to Cosmos
-        }
-    }
     const operations = [
         { op: PatchOperationType.set, path: `/messages`, value: updates.messages }
     ];
@@ -211,12 +160,5 @@ export const updateChatMessages = async (
  * @returns {Promise<boolean>} True if the deletion was successful, false otherwise.
  */
 export const deleteChat = async (id: Chat["id"], userId: Chat["userId"]): Promise<boolean> => {
-    if (useConvex && convexClient) {
-        try {
-            return (await (convexClient as any).mutation("chats:deleteChat", { id, userId })) as boolean;
-        } catch {
-            return false;
-        }
-    }
     return del(await getChatsContainer(), id, userId);
 };

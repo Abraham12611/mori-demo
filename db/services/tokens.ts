@@ -6,8 +6,6 @@ import { getTokensContainer } from "../containers";
 
 import { Token } from "../types";
 
-import { convexClient, useConvex } from "@/lib/convexClient";
-
 // CREATE
 
 /**
@@ -19,13 +17,6 @@ import { convexClient, useConvex } from "@/lib/convexClient";
  * @returns {Promise<Token | null>} The newly created token or null if creation failed.
  */
 export const addToken = async (token: Token): Promise<Token | null> => {
-    if (useConvex && convexClient) {
-        try {
-            return (await (convexClient as any).mutation("tokens:addToken", { token })) as Token | null;
-        } catch {
-            return null;
-        }
-    }
     return add<Token, Token>(await getTokensContainer(), token);
 };
 
@@ -40,13 +31,6 @@ export const addToken = async (token: Token): Promise<Token | null> => {
  * @returns {Promise<Token | null>} The retrieved token or null if not found.
  */
 export const getToken = async (id: Token["id"]): Promise<Token | null> => {
-    if (useConvex && convexClient) {
-        try {
-            return (await (convexClient as any).query("tokens:getToken", { id })) as Token | null;
-        } catch {
-            return null;
-        }
-    }
     return get(await getTokensContainer(), id, id);
 };
 
@@ -58,13 +42,6 @@ export const getToken = async (id: Token["id"]): Promise<Token | null> => {
  * @returns {Promise<Token[]>} An array of tokens.
  */
 export const findTokens = async (): Promise<Token[]> => {
-    if (useConvex && convexClient) {
-        try {
-            return (await (convexClient as any).query("tokens:findTokens", {})) as Token[];
-        } catch {
-            return [] as Token[];
-        }
-    }
     return find(
         await getTokensContainer(), 
         `SELECT * FROM c ORDER BY c._ts DESC`
@@ -80,24 +57,10 @@ export const findTokens = async (): Promise<Token[]> => {
  * @returns {Promise<Token[]>} An array of tokens.
  */
 export const findTokensBySymbol = async (symbol: string): Promise<Token[]> => {
-    if (useConvex && convexClient) {
-        try {
-            return (await (convexClient as any).query("tokens:findTokensBySymbol", { symbol })) as Token[];
-        } catch {
-            return [] as Token[];
-        }
-    }
     return find(await getTokensContainer(), `SELECT * FROM c WHERE LOWER(c.symbol) = LOWER(@symbol)`, [{ name: "@symbol", value: symbol }]);
 };
 
 export const getTokenBySymbol = async (symbol: string): Promise<Token | null> => {
-    if (useConvex && convexClient) {
-        try {
-            return (await (convexClient as any).query("tokens:getTokenBySymbol", { symbol })) as Token | null;
-        } catch {
-            // fall back to local logic
-        }
-    }
     const tokens = await findTokensBySymbol(symbol);
     if (!tokens || tokens.length === 0) return null;
     if (tokens.length === 1) {
@@ -128,12 +91,5 @@ export const getTokenBySymbol = async (symbol: string): Promise<Token | null> =>
  * @returns {Promise<boolean>} True if the deletion was successful, false otherwise.
  */
 export const deleteToken = async (id: Token["id"]): Promise<boolean> => {
-    if (useConvex && convexClient) {
-        try {
-            return (await (convexClient as any).mutation("tokens:deleteToken", { id })) as boolean;
-        } catch {
-            return false;
-        }
-    }
     return del(await getTokensContainer(), id, id);
 };
