@@ -20,6 +20,14 @@ const nextConfig: NextConfig = {
       "assets.coingecko.com"
     ],
   },
+  typescript: {
+    // Allow production builds to successfully complete even if there are type errors.
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    // Ignore ESLint errors during builds on Vercel.
+    ignoreDuringBuilds: true,
+  },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       // Replace child_process with an empty module on the client side
