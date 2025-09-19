@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { firecrawl } from "@/services/firecrawl";
+import { getFirecrawl } from "@/services/firecrawl";
 
 import { FirecrawlDocument } from "@mendable/firecrawl-js";
 import { embed, generateText } from "ai";
@@ -14,6 +14,8 @@ export const POST = async (req: NextRequest) => {
     if(authCode !== process.env.CRAWL_AUTH_CODE) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const firecrawl = getFirecrawl();
 
     const crawlResponse = await firecrawl.asyncCrawlUrl(url, {
         limit: 500,
