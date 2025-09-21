@@ -22,6 +22,29 @@ p, a, input, textarea, button, body {
     --sidebar-border: 0, 0%, 90%;
     --sidebar-ring: 217.2 91.2% 59.8%;
     --sidebar-active: 44, 100%, 41%;
+
+    /* Mori design tokens (from design.json) */
+    --mori-primary: #0F3D2E;
+    --mori-background: #F9F9F4;
+    --mori-text: #0F3D2E;
+    --mori-text-inverse: #FFFFFF;
+    --mori-text-muted: #2C2C2C;
+    --mori-border: #E0E0E0;
+    --mori-shadow: 0 4px 12px rgba(0,0,0,0.08);
+
+    /* Buttons */
+    --mori-btn-primary-bg: #0F3D2E;
+    --mori-btn-primary-hover: #145C44;
+    --mori-btn-primary-active: #0A241A;
+    --mori-btn-focus-outline: #4ECDC4;
+    --mori-btn-secondary-bg: #FFFFFF;
+    --mori-btn-secondary-border: #0F3D2E;
+    --mori-btn-secondary-hover-bg: #F0F5F3;
+    --mori-btn-secondary-active-bg: #E0ECE8;
+
+    /* Backgrounds */
+    --mori-app-gradient: linear-gradient(180deg, #FFFFFF 0%, #F9F9F4 100%);
+    --mori-hero-overlay-gradient: linear-gradient(180deg, rgba(249,249,244,0.95) 0%, rgba(249,249,244,0.88) 28%, rgba(249,249,244,0.78) 52%, rgba(249,249,244,0.70) 72%, rgba(249,249,244,0.60) 100%);
   }
 
   body {

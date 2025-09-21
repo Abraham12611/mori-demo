@@ -19,8 +19,28 @@ const dmMono = DM_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "The Hive",
-  description: "A modular network of interoperable DeFi agents",
+  title: "Mori Protocol",
+  description: "Humanized Artificial Intelligence Through Natural Emergence",
+  themeColor: "#F9F9F4",
+  openGraph: {
+    title: "Mori Protocol",
+    description: "Humanized Artificial Intelligence Through Natural Emergence",
+    type: "website",
+    images: [
+      {
+        url: "/mori-origami-forest.png",
+        width: 1200,
+        height: 630,
+        alt: "Mori Protocol"
+      }
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Mori Protocol",
+    description: "Humanized Artificial Intelligence Through Natural Emergence",
+    images: ["/mori-origami-forest.png"],
+  },
 };
 
 export const viewport: Viewport = {

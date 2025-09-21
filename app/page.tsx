@@ -1,448 +1,246 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import Image from 'next/image'
-import { BorderBeam } from '@/components/ui'
-import LlmCarousel from '@/components/ui/llm-carousel'
-import ApiCarousel from '@/components/ui/api-carousel'
-import TopBar from '@/components/ui/top-bar'
-import { ChevronDown } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible'
-import GraphComponent from './_components'
-import UserProfile from './_components/user-profile'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { usePrivy } from '@privy-io/react-auth';
-import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
-import { useColorMode } from './_contexts';
+import Link from 'next/link'
+import { Inter } from 'next/font/google'
 
-function FeatureCard({ title, description, index }: { title: string; description: string; index: number }) {
-    return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ 
-                duration: 0.6,
-                delay: index * 0.3,
-                ease: [0.21, 1.11, 0.81, 0.99]
-            }}
-            className="relative text-center group hover:scale-105 transition-transform duration-300 p-6 rounded-xl"
-        >
-            <BorderBeam size={100} duration={10} colorFrom="#ffe00d" colorTo="#d19900" />
-            <div className="relative z-10">
-                <h3 className="text-xl font-bold text-brand-600 mb-4">{title}</h3>
-                <p className="text-neutral-600 dark:text-neutral-400">
-                    {description}
-                </p>
-            </div>
-        </motion.div>
-    );
-}
+const inter = Inter({ subsets: ['latin'] });
 
-function TermsOfServiceDialog() {
-    return (
-        <Dialog>
-            <DialogTrigger className="text-sm text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
-                Terms of Service
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Terms of Service</DialogTitle>
-                </DialogHeader>
-                <div className="mt-4 space-y-4 text-sm text-neutral-600 dark:text-neutral-300">
-                    <p>By using The Hive, you agree to these terms:</p>
-                    <ul className="list-disc pl-5 space-y-2">
-                        <li>You are responsible for your own actions and transactions</li>
-                        <li>We do not guarantee any investment returns</li>
-                        <li>You must comply with all applicable laws and regulations</li>
-                    </ul>
-                </div>
-            </DialogContent>
-        </Dialog>
-    );
-}
+ 
 
-function PrivacyPolicyDialog() {
-    return (
-        <Dialog>
-            <DialogTrigger className="text-sm text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200">
-                Privacy Policy
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Privacy Policy</DialogTitle>
-                </DialogHeader>
-                <div className="mt-4 space-y-4 text-sm text-neutral-600 dark:text-neutral-300">
-                    <p>Your privacy is important to us:</p>
-                    <ul className="list-disc pl-5 space-y-2">
-                        <li>We do not store your private keys or sensitive data</li>
-                        <li>We do not collect any personal information</li>
-                        <li>We use industry-standard security measures</li>
-                    </ul>
-                </div>
-            </DialogContent>
-        </Dialog>
-    );
-}
+ 
 
-function LandingPageContent() {
-    const [copied, setCopied] = useState(false);
-    const [openFaq, setOpenFaq] = useState<number | null>(null);
-    const { ready, authenticated } = usePrivy();
-    const router = useRouter();
-    const [checkedBackArrow, setCheckedBackArrow] = React.useState(false);
-    const [showRedirecting, setShowRedirecting] = React.useState(false);
-    const { mode } = useColorMode();
+ 
 
-    // First effect: set checkedBackArrow true after mount
+ 
+
+// Mori-branded hero-only landing
+function MoriLanding() {
+    const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
+    const reduceMotion = React.useRef<boolean>(false);
+
     React.useEffect(() => {
-        setCheckedBackArrow(true);
+        document.body.classList.add('page--mori');
+        return () => {
+            document.body.classList.remove('page--mori');
+        };
     }, []);
 
-    // Helper to detect browser back/forward navigation
-    function isBackOrForwardNavigation() {
-        if (typeof window !== 'undefined' && 'navigation' in window.performance) {
-            // @ts-expect-error: getEntriesByType navigation is not typed in all browsers
-            const navType = window.performance.getEntriesByType('navigation')[0]?.type;
-            return navType === 'back_forward';
-        } else if (typeof window !== 'undefined' && window.performance && window.performance.navigation) {
-            // Deprecated API, fallback
-            return window.performance.navigation.type === 2;
-        }
-        return false;
-    }
-
-    // Second effect: only run redirect logic after checkedBackArrow is true
     React.useEffect(() => {
-        if (!checkedBackArrow) return;
-        if (ready && authenticated) {
-            if (typeof window !== 'undefined') {
-                const fromBackArrow = sessionStorage.getItem('fromAppBackArrow');
-                if (fromBackArrow) {
-                    sessionStorage.removeItem('fromAppBackArrow');
-                    return; // Skip redirect
+        if (typeof window === 'undefined') return;
+        reduceMotion.current = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        let animationId: number | null = null;
+        let rafStart = performance.now();
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        const resize = () => {
+            const { innerWidth: w, innerHeight: h } = window;
+            canvas.width = Math.floor(w * dpr);
+            canvas.height = Math.floor(h * dpr);
+            canvas.style.width = w + 'px';
+            canvas.style.height = h + 'px';
+            (ctx as CanvasRenderingContext2D).setTransform(dpr, 0, 0, dpr, 0, 0);
+        };
+        resize();
+        window.addEventListener('resize', resize);
+
+        type Tri = { x: number; y: number; vx: number; vy: number; r: number; rot: number; rotSpd: number; life: number; maxLife: number; color: string; };
+        const palette = [
+            'rgba(15,61,46,0.08)',
+            'rgba(20,92,68,0.08)',
+            'rgba(10,36,26,0.06)',
+            'rgba(215,222,215,0.35)'
+        ];
+
+        const spawnCountBase = 220;
+        const tris: Tri[] = [];
+
+        const spawnTri = () => {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const size = 4 + Math.random() * 14;
+            const vx = -0.15 + Math.random() * 0.4;
+            const vy = 0.1 + Math.random() * 0.35;
+            const rotSpd = (-40 + Math.random() * 80) * (Math.PI / 180);
+            const life = 8 + Math.random() * 10;
+            const tri: Tri = {
+                x: Math.random() * w,
+                y: Math.random() * h,
+                vx, vy,
+                r: size,
+                rot: Math.random() * Math.PI * 2,
+                rotSpd,
+                life,
+                maxLife: life,
+                color: palette[Math.floor(Math.random() * palette.length)],
+            };
+            tris.push(tri);
+        };
+
+        const targetCount = Math.min(spawnCountBase, Math.floor(window.innerWidth * window.innerHeight / 9000));
+        for (let i = 0; i < targetCount; i++) spawnTri();
+
+        const step = (t: number) => {
+            const dt = Math.min((t - rafStart) / 1000, 0.033);
+            rafStart = t;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            tris.forEach((tri) => {
+                if (!reduceMotion.current) {
+                    tri.x += tri.vx;
+                    tri.y += tri.vy;
+                    tri.rot += tri.rotSpd * dt;
+                    tri.life -= dt;
+                    if (tri.y > window.innerHeight + 20) tri.y = -20;
+                    if (tri.x < -20) tri.x = window.innerWidth + 20;
+                    if (tri.x > window.innerWidth + 20) tri.x = -20;
                 }
-                if (isBackOrForwardNavigation()) {
-                    return; // Skip redirect for browser back/forward
-                }
-            }
-            // Wait 1s, then show message, then after another 1s, redirect
-            const showMsgTimeout = setTimeout(() => {
-                setShowRedirecting(true);
-                const redirectTimeout = setTimeout(() => {
-                    router.replace('/chat');
-                }, 1000);
-                return () => clearTimeout(redirectTimeout);
-            }, 1000);
-            return () => clearTimeout(showMsgTimeout);
-        }
-    }, [ready, authenticated, router, checkedBackArrow]);
+                const alphaScale = reduceMotion.current ? 0.15 : 1;
+                ctx.save();
+                ctx.translate(tri.x, tri.y);
+                ctx.rotate(tri.rot);
+                ctx.beginPath();
+                ctx.moveTo(0, -tri.r);
+                ctx.lineTo(tri.r * 0.86, tri.r);
+                ctx.lineTo(-tri.r * 0.86, tri.r);
+                ctx.closePath();
+                ctx.fillStyle = tri.color.replace(/rgba\(([^,]+),([^,]+),([^,]+),([^\)]+)\)/, (m, r, g, b, a) => `rgba(${r},${g},${b},${parseFloat(a) * alphaScale})`);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            if (!reduceMotion.current) animationId = requestAnimationFrame(step);
+        };
+        animationId = requestAnimationFrame(step);
+
+        return () => {
+            if (animationId) cancelAnimationFrame(animationId);
+            window.removeEventListener('resize', resize);
+        };
+    }, []);
 
     return (
-        <div className="min-h-screen bg-white dark:bg-neutral-900">
-            <TopBar />
-            <UserProfile />
-            {/* Hero Section with Gradient */}
-            <div className="px-4 md:px-12">
-                <div className="relative overflow-hidden pb-16 bg-neutral-100 dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 mt-8 min-h-[800px]">
-                    {/* Graph Component as Background */}
-                    <div className="absolute inset-0 w-full h-full">
-                        <GraphComponent />
-                    </div>
-                    <BorderBeam size={100} duration={10} colorFrom="#ffe00d" colorTo="#d19900" />
-                </div>
-            </div>
-            <div className="max-w-4xl mx-auto px-4 mt-16 mb-16">
-                <div className="relative p-6 rounded-xl group hover:scale-105 transition-transform duration-300">
-                    <BorderBeam size={100} duration={10} colorFrom="#ffe00d" colorTo="#d19900" />
-                    <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            whileInView={{ opacity: 1 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 1.2, ease: [0.21, 1.11, 0.81, 0.99] }}
-                            className="text-center"
-                        >
-                            <h2 className="text-2xl md:text-3xl font-bold text-brand-600">
-                                Multiple Agents.
-                            </h2>
-                        </motion.div>
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            whileInView={{ opacity: 1 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 1.2, delay: 0.2, ease: [0.21, 1.11, 0.81, 0.99] }}
-                            className="text-center"
-                        >
-                            <h2 className="text-2xl md:text-3xl font-bold text-brand-600">
-                                Interoperable Protocols.
-                            </h2>
-                        </motion.div>
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            whileInView={{ opacity: 1 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 1.2, delay: 0.4, ease: [0.21, 1.11, 0.81, 0.99] }}
-                            className="text-center"
-                        >
-                            <h2 className="text-2xl md:text-3xl font-bold text-brand-600">
-                                Zero Friction.
-                            </h2>
-                        </motion.div>
-                    </div>
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 1.2, delay: 0.6, ease: [0.21, 1.11, 0.81, 0.99] }}
-                        className="relative z-10 text-center mt-8"
-                    >
-                        <p className="text-lg text-neutral-600 dark:text-neutral-400">
-                            We are building the intelligence layer for crypto.
-                        </p>
-                    </motion.div>
-                </div>
-            </div>
-            <hr className="w-full max-w-4xl mx-auto my-12 border-t border-neutral-200 dark:border-neutral-700 mb-8" />
-            <LlmCarousel />
-            <hr className="w-full max-w-4xl mx-auto my-12 border-t border-neutral-200 dark:border-neutral-700 mb-8" />
+        <div className={`${inter.className}`}>
+            {/* Background scene */}
+            <div id="mori-origami-forest" aria-hidden="true" className="fixed inset-0 -z-10 bg-[length:cover] bg-center" style={{ backgroundImage: "url('/mori-origami-forest.png')" }} />
+            <canvas id="mori-particles" ref={canvasRef} className="fixed inset-0 -z-[5] pointer-events-none" />
+            <div className="hero__overlay fixed inset-0 -z-[4] pointer-events-none" />
 
-            {/* Features Section */}
-            <div className="py-16">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-                        <FeatureCard
-                            index={0}
-                            title="Modular"
-                            description="Build and customize your DeFi experience using various AI agents"
-                        />
-                        <FeatureCard
-                            index={1}
-                            title="Interoperable"
-                            description="Seamlessly connect and interact with various DeFi protocols and services"
-                        />
-                        <FeatureCard
-                            index={2}
-                            title="Intuitive"
-                            description="Direct on-chain transactions and interactions using natural language"
-                        />
-                    </div>
+            {/* Header */}
+            <header className="site-header sticky top-0 z-30">
+                <div className="site-header__inner container mx-auto flex items-center justify-between gap-6 px-6 md:px-8 h-[72px] md:h-20 backdrop-blur-md" style={{ background: 'rgba(249,249,244,0.65)', borderBottom: '1px solid var(--mori-border)' }}>
+                    <a className="brand flex items-center gap-2" href="/" aria-label="Mori home">
+                        <Image src="/mori-logo.png" alt="Mori" width={28} height={28} />
+                        <span className="sr-only">Mori</span>
+                    </a>
+                    {/* Minimal header per hero-only spec; remove anchors to non-existent sections */}
                 </div>
-            </div>
-            <hr className="w-full max-w-4xl mx-auto my-12 border-t border-neutral-200 dark:border-neutral-700 mb-8" />
-            <ApiCarousel />
-            <hr className="w-full max-w-4xl mx-auto my-12 border-t border-neutral-200 dark:border-neutral-700 mb-8" />
-            {/* FAQ Section */}
-            <div className="max-w-3xl mx-auto mt-16 mb-16 px-4">
-                <h2 className="text-3xl md:text-4xl font-bold mb-2 text-center">
-                    Frequently Asked Questions
-                </h2>
-                <div className="mb-4" />
-                <div className="flex flex-col gap-4">
-                    {/* FAQ Item 1 */}
-                    <Collapsible open={openFaq === 0} onOpenChange={v => setOpenFaq(v ? 0 : null)}>
-                        <CollapsibleTrigger className="w-full bg-neutral-100 dark:bg-neutral-800 rounded-lg px-6 py-4 text-left text-lg font-medium flex justify-between items-center group">
-                            <span>What is The Hive?</span>
-                            <ChevronDown className="ml-2 w-5 h-5 transition-transform duration-300 group-data-[state=open]:rotate-180 text-neutral-400" />
-                        </CollapsibleTrigger>
-                        <AnimatePresence>
-                            {openFaq === 0 && (
-                                <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: "auto", opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                                >
-                                    <CollapsibleContent className="w-full bg-white dark:bg-neutral-900 rounded-b-lg px-6 py-4 text-base">
-                                        The Hive is a modular network of interoperable DeFi agents, enabling on-chain transactions and interactions using natural language.
-                                    </CollapsibleContent>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </Collapsible>
-                    {/* FAQ Item 2 */}
-                    <Collapsible open={openFaq === 1} onOpenChange={v => setOpenFaq(v ? 1 : null)}>
-                        <CollapsibleTrigger className="w-full bg-neutral-100 dark:bg-neutral-800 rounded-lg px-6 py-4 text-left text-lg font-medium flex justify-between items-center group">
-                            <span>Which blockchains are supported?</span>
-                            <ChevronDown className="ml-2 w-5 h-5 transition-transform duration-300 group-data-[state=open]:rotate-180 text-neutral-400" />
-                        </CollapsibleTrigger>
-                        <AnimatePresence>
-                            {openFaq === 1 && (
-                                <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: "auto", opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                                >
-                                    <CollapsibleContent className="w-full bg-white dark:bg-neutral-900 rounded-b-lg px-6 py-4 text-base">
-                                        Originally built on Solana, The Hive now supports various EVM chains such as BSC and Base, with future plans to expand to even more chains.
-                                    </CollapsibleContent>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </Collapsible>
-                    {/* FAQ Item 3 */}
-                    <Collapsible open={openFaq === 2} onOpenChange={v => setOpenFaq(v ? 2 : null)}>
-                        <CollapsibleTrigger className="w-full bg-neutral-100 dark:bg-neutral-800 rounded-lg px-6 py-4 text-left text-lg font-medium flex justify-between items-center group">
-                            <span>What else can The Hive do?</span>
-                            <ChevronDown className="ml-2 w-5 h-5 transition-transform duration-300 group-data-[state=open]:rotate-180 text-neutral-400" />
-                        </CollapsibleTrigger>
-                        <AnimatePresence>
-                            {openFaq === 2 && (
-                                <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: "auto", opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                                >
-                                    <CollapsibleContent className="w-full bg-white dark:bg-neutral-900 rounded-b-lg px-6 py-4 text-base">
-                                        The Hive also offers an AI-powered token dashboard, a portfolio tracker for connected wallets, and natural language execution for supported protocols.
-                                    </CollapsibleContent>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </Collapsible>
-                    {/* FAQ Item 4 */}
-                    <Collapsible open={openFaq === 3} onOpenChange={v => setOpenFaq(v ? 3 : null)}>
-                        <CollapsibleTrigger className="w-full bg-neutral-100 dark:bg-neutral-800 rounded-lg px-6 py-4 text-left text-lg font-medium flex justify-between items-center group">
-                            <span>Is the project open source?</span>
-                            <ChevronDown className="ml-2 w-5 h-5 transition-transform duration-300 group-data-[state=open]:rotate-180 text-neutral-400" />
-                        </CollapsibleTrigger>
-                        <AnimatePresence>
-                            {openFaq === 3 && (
-                                <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: "auto", opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                                >
-                                    <CollapsibleContent className="w-full bg-white dark:bg-neutral-900 rounded-b-lg px-6 py-4 text-base">
-                                        Yes! The Hive is open source and welcomes community contributions. Make a pull request to the official <a href="https://github.com/1leozhao/the-hive" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline hover:text-brand-700">fork repository</a>.
-                                    </CollapsibleContent>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </Collapsible>
-                    {/* FAQ Item 5 */}
-                    <Collapsible open={openFaq === 4} onOpenChange={v => setOpenFaq(v ? 4 : null)}>
-                        <CollapsibleTrigger className="w-full bg-neutral-100 dark:bg-neutral-800 rounded-lg px-6 py-4 text-left text-lg font-medium flex justify-between items-center group">
-                            <span>Does The Hive have a token?</span>
-                            <ChevronDown className="ml-2 w-5 h-5 transition-transform duration-300 group-data-[state=open]:rotate-180 text-neutral-400" />
-                        </CollapsibleTrigger>
-                        <AnimatePresence>
-                            {openFaq === 4 && (
-                                <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: "auto", opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                                >
-                                    <CollapsibleContent className="w-full bg-white dark:bg-neutral-900 rounded-b-lg px-6 py-4 text-base">
-                                        Yes, $BUZZ is the native token of The Hive. Its contract address is{' '}
-                                        <span className="relative inline-block align-middle">
-                                            <span
-                                                className="font-mono break-all text-brand-600 underline hover:text-brand-700 cursor-pointer"
-                                                title={copied ? 'Copied!' : 'Copy to clipboard'}
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText('9DHe3pycTuymFk4H4bbPoAJ4hQrr2kaLDF6J6aAKpump');
-                                                    setCopied(true);
-                                                    setTimeout(() => setCopied(false), 1200);
-                                                }}
-                                            >
-                                                9DHe3pycTuymFk4H4bbPoAJ4hQrr2kaLDF6J6aAKpump
-                                            </span>
-                                            {copied && (
-                                                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 text-xs rounded bg-neutral-800 text-white shadow z-10 whitespace-nowrap">
-                                                    Copied!
-                                                </span>
-                                            )}
-                                        </span>
-                                        {'. '}$BUZZ is strictly a meme coin.
-                                    </CollapsibleContent>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </Collapsible>
-                    {/* FAQ Item 6 */}
-                    <Collapsible open={openFaq === 5} onOpenChange={v => setOpenFaq(v ? 5 : null)}>
-                        <CollapsibleTrigger className="w-full bg-neutral-100 dark:bg-neutral-800 rounded-lg px-6 py-4 text-left text-lg font-medium flex justify-between items-center group">
-                            <span>Is there a community channel?</span>
-                            <ChevronDown className="ml-2 w-5 h-5 transition-transform duration-300 group-data-[state=open]:rotate-180 text-neutral-400" />
-                        </CollapsibleTrigger>
-                        <AnimatePresence>
-                            {openFaq === 5 && (
-                                <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: "auto", opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                                >
-                                    <CollapsibleContent className="w-full bg-white dark:bg-neutral-900 rounded-b-lg px-6 py-4 text-base">
-                                        The Hive community lives on{' '}
-                                        <a href="https://x.com/askthehive_ai" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline hover:text-brand-700">Twitter</a>{' '}and{' '}
-                                        <a href="https://discord.gg/8TVcFvySWG" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline hover:text-brand-700">Discord</a>. Any telegram channel claiming to represent The Hive is fake.
-                                    </CollapsibleContent>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </Collapsible>
-                </div>
-                <div className="text-center mt-8 text-base text-neutral-600 dark:text-neutral-300">
-                    Any more questions? Join the{' '}
-                    <a href="https://discord.gg/8TVcFvySWG" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline hover:text-brand-700">Discord server</a>!
-                </div>
-            </div>
+            </header>
 
-            {/* Footer Divider and Branding */}
-            <div className="w-full flex flex-col items-center mt-16 mb-8">
-                <hr className="w-full max-w-4xl border-t border-neutral-200 dark:border-neutral-700 mb-8" />
-                <div className="flex flex-col items-center gap-4">
-                    <div className="flex flex-row items-center gap-3">
-                        <div className="relative w-10 h-10">
-                            <Image
-                                src="/logo.png"
-                                alt="The Hive Logo"
-                                fill
-                                className="object-contain"
-                            />
+            {/* Hero */}
+            <section className="hero grid place-items-center pt-8 pb-12" style={{ minHeight: 'calc(100vh - 80px)' }}>
+                <div className="hero__content container mx-auto max-w-[980px] text-center px-6">
+                    <h1 className="hero__title" style={{
+                        color: 'var(--mori-primary)',
+                        fontSize: 'clamp(44px, 7vw, 96px)',
+                        lineHeight: 1.08,
+                        fontWeight: 600,
+                        letterSpacing: '-0.02em',
+                        textShadow: '0 18px 48px rgba(0,0,0,0.08)'
+                    }}>
+                        森 Mori Protocol
+                    </h1>
+                    <p className="hero__subtitle mx-auto mt-4" style={{
+                        color: 'var(--mori-text-muted)',
+                        fontSize: 'clamp(18px, 2.5vw, 22px)',
+                        lineHeight: 1.5,
+                        fontWeight: 400
+                    }}>
+                        Humanized Artificial Intelligence Through Natural Emergence
+                    </p>
+
+                    <div className="hero__cta mt-7 flex justify-center gap-4">
+                        <Link href="/chat" className="btn btn--primary" aria-label="Begin Journey">Begin Journey</Link>
+                    </div>
+
+                    <div className="hero__stats grid grid-cols-3 gap-7 mt-20 items-center">
+                        <div className="stat">
+                            <div className="stat__number" style={{ fontSize: 44, fontWeight: 600, color: 'var(--mori-primary)', lineHeight: 1.1 }}>1</div>
+                            <div className="stat__label mt-2" style={{ fontSize: 16, fontWeight: 400, color: 'var(--mori-text-muted)' }}>Active Agents</div>
                         </div>
-                        <span className="text-lg font-bold text-brand-600 font-sans">The Hive</span>
-                    </div>
-                    <div className="flex gap-4">
-                        <TermsOfServiceDialog />
-                        <PrivacyPolicyDialog />
+                        <div className="stat-divider mx-auto" style={{ height: 2, width: 56, background: 'var(--mori-primary)', opacity: 0.35, borderRadius: 9999 }} aria-hidden="true" />
+                        <div className="stat">
+                            <div className="stat__number" style={{ fontSize: 44, fontWeight: 600, color: 'var(--mori-primary)', lineHeight: 1.1 }}>—</div>
+                            <div className="stat__label mt-2" style={{ fontSize: 16, fontWeight: 400, color: 'var(--mori-text-muted)' }}>Tasks Completed</div>
+                        </div>
+                        <div className="stat-divider mx-auto col-start-2" style={{ display: 'none' }} />
+                        <div className="stat">
+                            <div className="stat__number" style={{ fontSize: 44, fontWeight: 600, color: 'var(--mori-primary)', lineHeight: 1.1 }}>—</div>
+                            <div className="stat__label mt-2" style={{ fontSize: 16, fontWeight: 400, color: 'var(--mori-text-muted)' }}>Partner Networks</div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <AnimatePresence>
-                {showRedirecting && (
-                    <div className="fixed bottom-6 inset-x-0 z-50 flex justify-center pointer-events-none">
-                        <motion.div
-                            initial={{ opacity: 0, y: 40 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 40 }}
-                            transition={{ duration: 0.3 }}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg pointer-events-auto
-                                ${mode === 'dark' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-900 border border-neutral-200'}`}
-                        >
-                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                            <span>Welcome back! Redirecting...</span>
-                        </motion.div>
+            {/* Footer */}
+            <footer className="site-footer border-t" style={{ borderTop: '1px solid var(--mori-border)' }}>
+                <div className="site-footer__inner container mx-auto grid sm:grid-cols-1 md:grid-cols-[auto_1fr_auto] items-center gap-4 px-6 py-10">
+                    <div className="footer__brand text-left">
+                        <div style={{ color: 'var(--mori-text-muted)', fontSize: 14 }}>© 2025 Mori Protocol</div>
+                        <div className="sub" style={{ color: '#98A2B3', fontSize: 12, marginTop: 6 }}>Building the Future of Harmonious AI</div>
                     </div>
-                )}
-            </AnimatePresence>
+                    <div className="footer__social text-center">
+                        <a href="https://x.com" aria-label="X" className="inline-flex h-6 w-6 items-center justify-center text-[var(--mori-primary)] hover:text-[var(--mori-btn-primary-hover)]">
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                        </a>
+                    </div>
+                    <div className="footer__links justify-self-end flex gap-7">
+                        <a href="/privacy" className="opacity-90 hover:opacity-100" style={{ color: 'var(--mori-primary)' }}>Privacy</a>
+                        <a href="/contact" className="opacity-90 hover:opacity-100" style={{ color: 'var(--mori-primary)' }}>Contact</a>
+                    </div>
+                </div>
+            </footer>
 
             <style jsx global>{`
-                :root {
-                    --gradient-start: #ffffff;
-                    --gradient-end: #fff7b2;
+                body.page--mori { 
+                    background: var(--mori-background); 
+                    color: var(--mori-text); 
+                    min-height: 100vh; 
+                    display: grid; 
+                    grid-template-rows: auto 1fr auto; 
                 }
-                .dark {
-                    --gradient-start: #171717;
-                    --gradient-end: #262626;
+                .hero__overlay { 
+                    background: var(--mori-hero-overlay-gradient);
+                }
+                /* Override global font rules to use Inter for Mori landing */
+                .page--mori h1, .page--mori h2, .page--mori h3, .page--mori h4, .page--mori h5, .page--mori h6 {
+                    font-family: inherit !important;
+                }
+                .page--mori, .page--mori p, .page--mori a, .page--mori button {
+                    font-family: inherit;
+                }
+                .btn { 
+                    display: inline-flex; align-items: center; justify-content: center; 
+                    font-weight: 600; font-size: 16px; border-radius: 9999px; 
+                    padding: 14px 28px; transition: all .15s ease-in-out; 
+                }
+                .btn--primary { background: var(--mori-btn-primary-bg); color: var(--mori-text-inverse); box-shadow: 0 6px 18px rgba(15,61,46,0.20); }
+                .btn--primary:hover { background: var(--mori-btn-primary-hover); transform: translateY(-1px); }
+                .btn--primary:active { background: var(--mori-btn-primary-active); transform: translateY(0); }
+                .btn--primary:focus-visible { outline: 2px solid var(--mori-btn-focus-outline); outline-offset: 2px; }
+                .btn--secondary { background: var(--mori-btn-secondary-bg); color: var(--mori-primary); border: 1px solid var(--mori-btn-secondary-border); padding: 14px 26px; }
+                .btn--secondary:hover { background: var(--mori-btn-secondary-hover-bg); }
+                .btn--secondary:active { background: var(--mori-btn-secondary-active-bg); }
+                .btn--secondary:focus-visible { outline: 2px solid var(--mori-primary); outline-offset: 2px; }
+                @media (prefers-reduced-motion: reduce) {
+                    .btn--primary:hover { transform: none; }
                 }
             `}</style>
         </div>
@@ -450,5 +248,5 @@ function LandingPageContent() {
 }
 
 export default function LandingPage() {
-    return <LandingPageContent />;
+    return <MoriLanding />;
 }
